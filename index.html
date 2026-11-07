@@ -339,8 +339,6 @@ details[open] summary{margin-bottom:12px}
       <div class="foot-tel"><span>문의전화</span><b>02-6925-4534</b></div>
     </div>
     <div class="foot-info">
-      <p>경기도 광명시 양지로 21, T타워 2307호</p>
-      <p>사업자등록번호: 204-85-31650</p>
       <p class="foot-copy">© 2026 김하나 세무사. All rights reserved.</p>
     </div>
   </div>
@@ -1051,6 +1049,17 @@ function consultPayload(){
 }
 const dlg=$('consultDlg');
 $('cKakao').href = CONSULT_URL || '#';
+// 카카오톡으로 문의하기: 신청서에 적은 내용 + 계산 결과를 복사한 뒤 채널 채팅방 열기 (카카오는 자동 입력을 막아 붙여넣기 1번 필요)
+$('cKakao').addEventListener('click', async e=>{
+  e.preventDefault();
+  if(!CONSULT_URL) return;
+  const name=$('cName').value.trim(), phone=$('cPhone').value.trim(), memo=$('cMemo').value.trim();
+  const who=[name&&`이름: ${name}`, phone&&`연락처: ${phone}`, memo&&`문의: ${memo}`].filter(Boolean).join('\n');
+  const text='[사전증여 상담 문의]\n'+(who?who+'\n\n':'')+summary();
+  const ok=await copy(text);
+  toast(ok ? '내용이 복사되었습니다. 채팅창을 길게 눌러 붙여넣고 보내주세요.' : '카카오톡 채팅방으로 이동합니다.');
+  setTimeout(()=>{ location.href=CONSULT_URL; }, ok?1500:600);
+});
 $('ctaBtn').addEventListener('click', ()=>{
   if(!SUPABASE_URL || !SUPABASE_KEY || !dlg.showModal){ kakaoFallback(); return; }
   $('consultForm').hidden=false; $('consultDone').hidden=true; $('cErr').hidden=true;
