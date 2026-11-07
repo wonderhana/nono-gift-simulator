@@ -211,7 +211,7 @@ details[open] summary{margin-bottom:12px}
     <div class="field">
       <div class="lbl" style="display:block">상속재산 <small style="display:block;margin-top:2px">(아버지 또는 어머니 명의의 재산을 넣으세요. 두 분 합계 아님)</small></div>
       <div class="numbox"><input id="eNum" type="number" inputmode="decimal" min="1" max="2000" step="0.5" aria-label="상속재산(억 원)"><span>억 원</span></div>
-      <input id="eRange" type="range" min="1" max="200" step="0.5" aria-label="상속재산 슬라이더">
+      <input id="eRange" type="range" min="1" max="100" step="0.5" aria-label="상속재산 슬라이더">
     </div>
 
     <div class="field">
@@ -658,7 +658,7 @@ function renderSpread(){
 const $ = id => document.getElementById(id);
 function syncInputs(){
   $('eNum').value = +(S.e/10000).toFixed(2);
-  $('eRange').value = Math.min(200, S.e/10000);
+  $('eRange').value = Math.min(100, S.e/10000);
   document.querySelectorAll('#spSeg button').forEach(b=>b.setAttribute('aria-pressed', String(+b.dataset.v===S.sp)));
   document.querySelectorAll('.stepper').forEach(st=>{ st.querySelector('output').textContent = S[st.dataset.key]+'명'; });
   $('dToggle').checked = !!S.d; $('dSub').hidden = !S.d;
