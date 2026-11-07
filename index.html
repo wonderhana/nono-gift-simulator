@@ -3,9 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>사전증여 시뮬레이터</title>
+<title>사전증여 처방전</title>
 <meta name="description" content="증여세와 상속세, 두 세율이 만나는 지점을 찾아 자녀 1인당 추천 증여액과 절세액을 계산합니다.">
-<meta property="og:title" content="사전증여 시뮬레이터">
+<meta property="og:title" content="사전증여 처방전">
 <meta property="og:description" content="우리 가족은 얼마를 미리 증여해야 세금이 가장 적을까?">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <style>
@@ -22,7 +22,11 @@ body{margin:0;background:var(--bg);color:var(--ink);line-height:1.55;word-break:
 .wrap{max-width:560px;margin:0 auto;padding:16px}
 header{padding:12px 4px 4px}
 header h1{font-size:1.55rem;margin:0 0 4px;letter-spacing:-.02em}
+.head-row{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.head-btns{display:flex;gap:6px;flex:none}
+.head-btn{display:inline-flex;align-items:center;gap:4px;height:34px;padding:0 10px;border:1.5px solid var(--line);border-radius:17px;background:#fff;color:var(--ink);font:inherit;font-size:.78rem;font-weight:700;text-decoration:none;cursor:pointer}
 header p{margin:0;color:var(--sub);font-size:1rem}
+header .calc-note{margin-top:8px;font-size:.72rem;line-height:1.5;color:#8a8a90}
 .card{background:var(--card);border-radius:18px;padding:20px 18px;margin:14px 0;box-shadow:0 1px 2px rgba(0,0,0,.05)}
 .card h2{font-size:1.1rem;margin:0 0 14px;color:var(--sub);font-weight:700}
 .field{margin:0 0 22px}
@@ -101,7 +105,6 @@ details[open] summary{margin-bottom:12px}
 .bar .f{position:absolute;top:0;bottom:0}
 .bar.l .f{right:0;background:var(--gift)}
 .bar.r .f{left:0;background:var(--inh)}
-.bar .ghost{position:absolute;top:6px;bottom:6px;right:0;border:2px dashed var(--gift);border-right:0;border-radius:6px 0 0 6px}
 .bar .t{position:absolute;top:50%;transform:translateY(-50%);font-size:.8rem;font-weight:700;white-space:nowrap;padding:0 8px}
 .bar.l .t{left:0}
 .bar.r .t{right:0}
@@ -127,25 +130,27 @@ details[open] summary{margin-bottom:12px}
 .disclaimer{font-size:.8rem;color:var(--sub);text-align:center;margin:18px 4px}
 .disclaimer p{margin:4px 0}
 
-/* footer */
-.foot{background:#0e1628;color:#c9d1e0;margin-top:24px;padding:32px 20px calc(170px + env(safe-area-inset-bottom))}
-.foot-in{max-width:960px;margin:0 auto;display:grid;gap:28px}
-.foot-logo{display:flex;align-items:center;gap:14px;color:#fff}
-.foot-logo b{font-size:1.35rem;letter-spacing:-.01em}
-.foot-tag{margin:14px 0 18px;font-size:.95rem}
-.foot-tel{display:flex;align-items:baseline;gap:12px;text-decoration:none;color:inherit}
-.foot-tel span{font-size:.95rem;color:#9aa6bd}
-.foot-tel b{font-size:1.75rem;color:#d9b88a;letter-spacing:.01em}
+/* footer — 시뮬레이터 본문과 같은 폭(560px)·글자 크기 */
+.foot{background:#0e1628;color:#c9d1e0;margin-top:24px;padding:28px 0 calc(150px + env(safe-area-inset-bottom))}
+.foot-in{max-width:560px;margin:0 auto;padding:0 20px;display:grid;gap:16px;line-height:1.35}
+.foot-logo{display:inline-flex;align-items:center;gap:10px;color:#fff;text-decoration:none}
+.foot-logo svg{width:23px;height:23px;flex:none}
+.foot-logo b{font-size:1.35rem;font-weight:800;line-height:1}
+.foot-tag{margin:8px 0 6px;font-size:.85rem}
+.foot-tel{display:flex;align-items:baseline;gap:10px}
+.foot-tel span{font-size:1rem;color:#9aa6bd}
+.foot-tel b{font-size:1rem;font-weight:800;color:#d9b88a}
+.foot-info{}
 .foot-info b{color:#fff;font-size:1rem}
-.foot-info p{margin:10px 0 0;font-size:.92rem}
-.foot-info .foot-copy{color:#7c89a3;margin-top:16px}
-@media (min-width:720px){.foot-in{grid-template-columns:1fr 1fr}}
+.foot-info p{margin:2px 0 0;font-size:.85rem}
+.foot-info .foot-copy{color:#7c89a3;font-size:.8rem;margin-top:8px}
 
-/* sticky bar */
-.sticky{position:fixed;left:0;right:0;bottom:0;background:#fff;box-shadow:0 -4px 16px rgba(0,0,0,.08);padding:10px 16px calc(12px + env(safe-area-inset-bottom));z-index:10}
+/* sticky bar — 풋바와 같은 남색 */
+.sticky{position:fixed;left:0;right:0;bottom:0;background:#0e1628;box-shadow:0 -4px 16px rgba(0,0,0,.15);padding:10px 16px calc(12px + env(safe-area-inset-bottom));z-index:10}
 .sticky .in{max-width:560px;margin:0 auto}
-.sticky p{margin:0 0 8px;font-size:.85rem;font-weight:700;color:var(--bad);text-align:center}
-.cta{width:100%;min-height:58px;border:0;border-radius:16px;background:var(--good);color:#fff;font:inherit;font-size:1.15rem;font-weight:800;cursor:pointer}
+.sticky p{margin:0 0 8px;font-size:.85rem;font-weight:700;color:#c9d1e0;text-align:center;letter-spacing:.02em}
+.sticky p b{color:#fff}
+.cta{width:100%;min-height:58px;border:0;border-radius:16px;background:#d9b88a;color:#0e1628;font:inherit;font-size:1.15rem;font-weight:800;cursor:pointer}
 .toast{position:fixed;left:50%;bottom:150px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:12px 18px;border-radius:12px;font-size:.9rem;opacity:0;transition:.25s;pointer-events:none;max-width:90%;text-align:center;z-index:20}
 .toast.show{opacity:1}
 [hidden]{display:none!important}
@@ -154,8 +159,18 @@ details[open] summary{margin-bottom:12px}
 <body>
 <div class="wrap">
   <header>
-    <h1>사전증여 시뮬레이터</h1>
-    <p>증여세와 상속세, <b>두 세율이 만나는 지점</b>을 찾아드립니다.</p>
+    <div class="head-row">
+      <h1>사전증여 처방전</h1>
+      <div class="head-btns">
+        <button type="button" class="head-btn" id="linkShareBtn" aria-label="이 페이지 링크 공유">
+          <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg>공유
+        </button>
+        <a class="head-btn yt" href="https://youtu.be/f1MfFNZxR2E?si=4pWt26buT6Qly8RR" target="_blank" rel="noopener" aria-label="유튜브 영상 보기">
+          <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><rect x="1" y="4.5" width="22" height="15" rx="4.5" fill="#ff0000"/><path d="M10 8.8v6.4l5.6-3.2z" fill="#fff"/></svg>영상
+        </a>
+      </div>
+    </div>
+    <p class="calc-note">일괄공제 5억 원 적용, 금융재산공제·동거주택공제·신고세액공제(3%)·혼인출산 증여공제는 반영하지 않았습니다. 손주는 성년 기준(미성년 공제 2천만 원)입니다. 증여는 1천만 원 단위로 계산합니다.</p>
   </header>
 
   <!-- 1. 입력 -->
@@ -166,9 +181,9 @@ details[open] summary{margin-bottom:12px}
     </div>
 
     <div class="field">
-      <div class="lbl" style="display:block">상속재산 <small style="display:block;margin-top:2px">(아버지 또는 어머니 각자의 재산을 넣으세요. 두 분 합계 아님)</small></div>
+      <div class="lbl" style="display:block">상속재산 <small style="display:block;margin-top:2px">(아버지 또는 어머니 명의의 재산을 넣으세요. 두 분 합계 아님)</small></div>
       <div class="numbox"><input id="eNum" type="number" inputmode="decimal" min="1" max="2000" step="0.5" aria-label="상속재산(억 원)"><span>억 원</span></div>
-      <input id="eRange" type="range" min="1" max="100" step="0.5" aria-label="상속재산 슬라이더">
+      <input id="eRange" type="range" min="1" max="200" step="0.5" aria-label="상속재산 슬라이더">
     </div>
 
     <div class="field">
@@ -235,7 +250,26 @@ details[open] summary{margin-bottom:12px}
     <h2 id="h-res">결과</h2>
     <p class="mode-note" id="modeNote" hidden></p>
     <ul class="res" id="res"></ul>
-    <button type="button" class="btn share" id="shareBtn">📤 이 결과를 링크로 보내기</button>
+    <button type="button" class="btn share" id="shareBtn">📤 가족들에게 결과 보내기</button>
+  </section>
+
+  <!-- 4. 직접 움직여보기 + 세율표 -->
+  <section class="card" aria-labelledby="h-ex">
+    <div class="explore-head">
+      <h2 id="h-ex" style="margin:0">직접 움직여 보기</h2>
+      <button type="button" class="btn sm" id="toRec">추천값으로</button>
+    </div>
+    <div class="lbl" style="margin-top:12px">자녀 1인당 증여금액 <b id="selOut"></b></div>
+    <input id="selRange" type="range" min="0" max="100" step="1000" aria-label="자녀 1인당 증여액 조정">
+    <div class="mini">
+      <div><span>총세금</span><b id="selTotal"></b></div>
+      <div><span>증여 안 할 때 대비</span><b id="selSave"></b></div>
+    </div>
+
+    <h2 style="margin:22px 0 10px">세율표로 보기</h2>
+    <div class="bf-head"><span class="g">◀ 증여세액<br>(자녀 1명)</span><span class="c">세율</span><span class="i">상속세액 ▶<br>(증여 후)</span></div>
+    <div id="bf"></div>
+    <div class="verdict" id="verdict"></div>
   </section>
 
   <!-- 3. 그래프 -->
@@ -251,52 +285,29 @@ details[open] summary{margin-bottom:12px}
     </div>
   </section>
 
-  <!-- 4. 직접 움직여보기 + 세율표 -->
-  <section class="card" aria-labelledby="h-ex">
-    <div class="explore-head">
-      <h2 id="h-ex" style="margin:0">직접 움직여 보기</h2>
-      <button type="button" class="btn sm" id="toRec">추천값으로</button>
-    </div>
-    <div class="lbl" style="margin-top:12px">자녀 1인당 <b id="selOut"></b></div>
-    <input id="selRange" type="range" min="0" max="100" step="1000" aria-label="자녀 1인당 증여액 조정">
-    <div class="mini">
-      <div><span>총세금</span><b id="selTotal"></b></div>
-      <div><span>증여 안 할 때 대비</span><b id="selSave"></b></div>
-    </div>
-
-    <h2 style="margin:22px 0 10px">세율표 위에서 보기</h2>
-    <div class="bf-head"><span class="g">◀ 증여세 과표<br>(자녀 1명)</span><span class="c">세율</span><span class="i">상속세 과표 ▶<br>(증여 후)</span></div>
-    <div id="bf"></div>
-    <p class="hint" id="ghostHint" hidden>점선 칸: 같은 총액을 자녀 한 명에게 몰아줄 때</p>
-    <div class="verdict" id="verdict"></div>
-  </section>
-
   <p class="spread" id="spread" hidden></p>
 
   <div id="warns"></div>
 
   <div class="disclaimer">
-    <p><b>2026년 11월 현행 세법 기준, 개별 상황은 김하나 세무사 상담 필요</b></p>
-    <p>본 결과는 입력하신 한 분의 상속만 계산한 참고용 추정치이며, 배우자가 이후 다시 상속하는 경우(2차 상속)는 반영하지 않습니다. 실제 세액은 재산 평가·공제 요건에 따라 달라질 수 있어 법적 효력이나 세무 신고의 근거가 되지 않습니다.</p>
-    <p>일괄공제 5억 원 적용, 금융재산공제·동거주택공제·신고세액공제(3%)·혼인출산 증여공제는 반영하지 않았습니다. 손주는 성년 기준(미성년 공제 2천만 원)입니다. 증여는 1천만 원 단위로 계산합니다.</p>
+    <p><b>2026년 현행 세법 기준, 개별 상황은 상담 필요</b></p>
+    <p>본 결과는 입력한 내용을 토대로 계산한 참고용 추정치이며, 배우자가 이후 다시 상속하는 경우(2차 상속)는 반영하지 않습니다. 실제 세액은 재산 평가·공제 요건에 따라 달라질 수 있어 법적 효력이나 세무 신고의 근거가 되지 않습니다.</p>
   </div>
 </div>
 
 <footer class="foot">
   <div class="foot-in">
     <div class="foot-brand">
-      <div class="foot-logo">
+      <a class="foot-logo" href="https://familytax.kr/" target="_blank" rel="noopener">
         <svg viewBox="0 0 40 40" width="40" height="40" aria-hidden="true" fill="none" stroke="#fff" stroke-width="2.6"><rect x="1.5" y="1.5" width="37" height="37"/><path d="M14 1.5V26H38.5M26 1.5V14H38.5"/></svg>
         <b>노노상속연구소</b>
-      </div>
-      <p class="foot-tag">고령 상속·증여 솔루션</p>
-      <a class="foot-tel" href="tel:0269254534"><span>문의전화</span><b>02-6925-4534</b></a>
+      </a>
+      <p class="foot-tag">고령 상속·증여 솔루션 │ 김하나 세무사</p>
+      <div class="foot-tel"><span>문의전화</span><b>02-6925-4534</b></div>
     </div>
     <div class="foot-info">
-      <b>윤솔세무법인</b>
       <p>경기도 광명시 양지로 21, T타워 2307호</p>
       <p>사업자등록번호: 204-85-31650</p>
-      <p>대표세무사: 김하나</p>
       <p class="foot-copy">© 2026 김하나 세무사. All rights reserved.</p>
     </div>
   </div>
@@ -304,8 +315,8 @@ details[open] summary{margin-bottom:12px}
 
 <div class="sticky">
   <div class="in">
-    <p>⚠ 증여세를 부모님이 대신 내주시면 그 금액도 증여입니다</p>
-    <button type="button" class="cta" id="ctaBtn">이 결과로 상담 신청</button>
+    <p><b>노노상속연구소</b> │ 김하나 세무사</p>
+    <button type="button" class="cta" id="ctaBtn">사전증여 상담 신청</button>
   </div>
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -361,6 +372,7 @@ function won(m){
   return (neg?'−':'') + (e? e.toLocaleString()+'억':'') + (r? (e?' ':'')+r.toLocaleString()+'만':'') + ' 원';
 }
 function eok(m){ const v=Math.round(m/1000)/10; return v.toLocaleString()+'억'; }
+function taxShort(m){ m=Math.round(m); const e=Math.floor(m/10000), r=m%10000; return e ? e.toLocaleString()+'억'+(r?' '+r.toLocaleString()+'만':'') : r.toLocaleString()+'만'; }
 function pct(i){ return i<0 ? '0%' : Math.round(BR[i].r*100)+'%'; }
 
 /* ===== 계산 ===== */
@@ -523,23 +535,20 @@ function renderExplore(){
 
   // 나비형 세율표
   const gi=bIdx(p.gBase), ii=bIdx(p.base);
-  const single = n>1 && p.x>0 ? Math.max(0, p.x*n - CHILD_DED) : 0;
   let h='';
   for(let i=0;i<BR.length;i++){
     const gf = Math.min(1, Math.max(0, p.gBase-LO[i])/WIDTH[i]);
     const gAmt = Math.max(0, Math.min(p.gBase, BR[i].lim) - LO[i]);
     const iff = Math.min(1, Math.max(0, p.base-LO[i])/WIDTH[i]);
     const iAmt = Math.max(0, Math.min(p.base, BR[i].lim) - LO[i]);
-    const ghost = single ? Math.min(1, Math.max(0, single-LO[i])/WIDTH[i]) : 0;
     const meet = gi===i && ii===i;
     h += `<div class="bf-row${meet?' meet':''}">
-      <div class="bar l${gi===i?' on':''}">${ghost>gf?`<div class="ghost" style="width:${ghost*100}%"></div>`:''}<div class="f" style="width:${gf*100}%"></div>${gAmt>0?`<span class="t" style="color:${gf>.55?'#fff':'var(--gift)'};${gf>.55?'right:0;left:auto':''}">${eok(gAmt)}</span>`:''}</div>
+      <div class="bar l${gi===i?' on':''}"><div class="f" style="width:${gf*100}%"></div>${gAmt>0?`<span class="t" style="color:${gf>.55?'#fff':'var(--gift)'};${gf>.55?'right:0;left:auto':''}">${taxShort(gAmt*BR[i].r)}</span>`:''}</div>
       <div class="rate"><b>${Math.round(BR[i].r*100)}%</b><span>${BR[i].label}</span></div>
-      <div class="bar r${ii===i?' on':''}"><div class="f" style="width:${iff*100}%"></div>${iAmt>0?`<span class="t" style="color:${iff>.55?'#fff':'var(--inh)'};${iff>.55?'left:0;right:auto':''}">${eok(iAmt)}</span>`:''}</div>
+      <div class="bar r${ii===i?' on':''}"><div class="f" style="width:${iff*100}%"></div>${iAmt>0?`<span class="t" style="color:${iff>.55?'#fff':'var(--inh)'};${iff>.55?'left:0;right:auto':''}">${taxShort(iAmt*BR[i].r)}</span>`:''}</div>
     </div>`;
   }
   document.getElementById('bf').innerHTML = h;
-  document.getElementById('ghostHint').hidden = !(single>0);
 
   // 기울기 판정
   const k=Math.round(sel/STEP), nx=pts[k+1];
@@ -550,7 +559,7 @@ function renderExplore(){
     const dlt = nx.total - p.total;
     if(dlt < -1){ v.className='verdict down'; v.textContent=`${gTxt} < ${iTxt} → 더 줄수록 총세금이 줄어듭니다`; }
     else if(dlt > 1){ v.className='verdict up'; v.textContent=`${gTxt} > ${iTxt} → 더 줄수록 총세금이 늘어납니다`; }
-    else { v.className='verdict flat'; v.textContent=`두 세율이 만났습니다 → 여기서는 더 줘도 세금이 같습니다`; }
+    else { v.className='verdict flat'; v.textContent=`두 세율이 동일합니다 → 더 줘도 세금이 동일합니다`; }
   }
 
   // 경고
@@ -566,6 +575,7 @@ function renderExplore(){
   if(!S.d){
     w+=`<div class="warn amber"><strong>10년 안에 상속이 생기면?</strong>자녀 증여는 10년, 손주·며느리·사위는 5년 안에 상속이 생기면 상속재산에 다시 합산됩니다. 위의 ‘10년 이내 사망 가정’을 켜서 비교해 보세요.</div>`;
   }
+  w+=`<div class="warn amber"><strong>증여세 대납 주의</strong>증여세를 부모님이 대신 내주시면 그 금액도 증여입니다.</div>`;
   document.getElementById('warns').innerHTML = w;
 }
 
@@ -588,7 +598,7 @@ function renderSpread(){
 const $ = id => document.getElementById(id);
 function syncInputs(){
   $('eNum').value = +(S.e/10000).toFixed(2);
-  $('eRange').value = Math.min(100, S.e/10000);
+  $('eRange').value = Math.min(200, S.e/10000);
   document.querySelectorAll('#spSeg button').forEach(b=>b.setAttribute('aria-pressed', String(+b.dataset.v===S.sp)));
   document.querySelectorAll('.stepper').forEach(st=>{ st.querySelector('output').textContent = S[st.dataset.key]+'명'; });
   $('dToggle').checked = !!S.d; $('dSub').hidden = !S.d;
@@ -604,6 +614,7 @@ function syncInputs(){
 function update(){
   compute(); sel = M.rec.x;
   syncInputs(); renderResults(); renderChart(); renderExplore(); renderSpread(); writeURL();
+  scheduleImage();
 }
 function setSel(v){
   sel = Math.max(0, Math.min(M.xmax, Math.round(v/STEP)*STEP));
@@ -646,24 +657,335 @@ $('resetBtn').addEventListener('click', ()=>{
   svg.addEventListener('pointercancel',()=>down=false);
 })();
 
+/* ===== 결과 이미지 (1080×1350) ===== */
+const SITE_URL = 'https://wonderhana.github.io/nono-gift-simulator/';
+const IMG_FONT = '"Pretendard Variable",Pretendard,"Apple SD Gothic Neo","Malgun Gothic",sans-serif';
+function rr(g,x,y,w,h,r){ g.beginPath(); g.moveTo(x+r,y); g.arcTo(x+w,y,x+w,y+h,r); g.arcTo(x+w,y+h,x,y+h,r); g.arcTo(x,y+h,x,y,r); g.arcTo(x,y,x+w,y,r); g.closePath(); }
+function shareURL(){
+  // 공유용 주소는 항상 공개 주소 기준 (로컬 파일로 열었을 때도)
+  return SITE_URL + location.search;
+}
+function drawChartOn(g, F){
+  const W=340,H=250, L=46,Rm=12,T=34,B=40;
+  const {pts, xmax, baseline, rec, cap} = M;
+  const C={gift:"#2458d6", inh:"#d9480f", good:"#16803c", bad:"#d32626", ink:"#1c1c1e"};
+  const xm = Math.max(xmax, STEP);
+  let ymax = Math.max(baseline.total, ...pts.map(p=>p.total)) * 1.08 || 10000;
+  const steps=[1000,2000,5000,10000,20000,50000,100000,200000,500000,1000000];
+  const ys = steps.find(s=>ymax/s<=5) || steps[steps.length-1];
+  ymax = Math.ceil(ymax/ys)*ys;
+  const X=v=>L+(v/xm)*(W-L-Rm), Y=v=>T+(1-v/ymax)*(H-T-B);
+  const line=(x1,y1,x2,y2,col,w,dash)=>{ g.beginPath(); g.setLineDash(dash||[]); g.strokeStyle=col; g.lineWidth=w; g.moveTo(x1,y1); g.lineTo(x2,y2); g.stroke(); g.setLineDash([]); };
+  const text=(s,x,y,size,col,align,weight)=>{ g.font=F(weight||500,size); g.fillStyle=col; g.textAlign=align; g.fillText(s,x,y); };
+  g.textBaseline="alphabetic";
+  for(let v=0; v<=ymax+1; v+=ys){ line(L,Y(v),W-Rm,Y(v),"#ece9e1",1); text(eok(v),L-6,Y(v)+4,11,"#777","right"); }
+  const xsteps=[1000,2000,5000,10000,20000,50000,100000,200000,500000];
+  const xs = xsteps.find(s=>xm/s<=5) || 500000;
+  for(let v=0; v<=xm+1; v+=xs) text(eok(v),X(v),H-B+16,11,"#777","center");
+  text("자녀 1인당 증여액 →",(L+W-Rm)/2,H-6,11.5,"#555","center",700);
+  if(cap.x>rec.x){ g.fillStyle="rgba(220,247,228,.8)"; g.fillRect(X(rec.x),T,X(cap.x)-X(rec.x),H-T-B); }
+  const brk=(lines,col,prefix,ly)=>{ let last=-1e9; lines.forEach(l=>{ const px=X(l.x); line(px,T-4,px,H-B,col,1.2,[3,3]); if(px-last>=32){ text(prefix+l.rate,Math.min(px,W-Rm-14),ly,10,col,"center",700); last=px; } }); };
+  brk(M.gLines,C.gift,"증",T-18); brk(M.iLines,C.inh,"상",T-5);
+  line(L,Y(baseline.total),W-Rm,Y(baseline.total),"#999",1,[6,4]);
+  const stride=Math.max(1,Math.floor(pts.length/400));
+  g.beginPath(); g.strokeStyle=C.ink; g.lineWidth=2.6; g.lineJoin="round";
+  pts.forEach((p,i)=>{ if(i%stride===0||i===pts.length-1){ i?g.lineTo(X(p.x),Y(p.total)):g.moveTo(X(p.x),Y(p.total)); } }); g.stroke();
+  const dot=(p,col,r)=>{ g.beginPath(); g.arc(X(p.x),Y(p.total),r,0,7); g.fillStyle=col; g.fill(); g.lineWidth=2; g.strokeStyle="#fff"; g.stroke(); };
+  if(baseline.total-rec.total>=1){
+    if(cap.x!==rec.x) dot(cap,C.bad,7); else { g.beginPath(); g.arc(X(cap.x),Y(cap.total),10,0,7); g.lineWidth=3; g.strokeStyle=C.bad; g.stroke(); }
+    dot(rec,C.good,7);
+  }
+  line(L,T,L,H-B,"#bbb",1); line(L,H-B,W-Rm,H-B,"#bbb",1);
+  text("총세금",4,12,11.5,"#555","left",700);
+  // 범례
+  const lg=[["추천",C.good,0],["상한선",C.bad,0],["증여세 계단",C.gift,1],["상속세 계단",C.inh,1],["증여 안 할 때","#999",1]];
+  let lx=L; const ly=H+10;
+  lg.forEach(([s,col,dash])=>{ if(dash) line(lx,ly-3,lx+14,ly-3,col,1.5,[3,2]); else { g.beginPath(); g.arc(lx+5,ly-3,4,0,7); g.fillStyle=col; g.fill(); } text(s,lx+(dash?17:12),ly,9.5,"#5d5d63","left",600); g.font=F(600,9.5); lx+=(dash?17:12)+g.measureText(s).width+10; });
+}
+async function makeResultImage(){
+  const W=1080, P=64;
+  const {baseline, rec, cap}=M, n=S.c;
+  const save = baseline.total - rec.total, ok = save >= 1;
+  const F=(w,s)=>`${w} ${s}px ${IMG_FONT}`;
+  const cond = `상속재산 ${eok(S.e)} · 배우자 ${S.sp?"있음":"없음"} · 자녀 ${n}명` + (S.d?` · ${S.y}년 내 사망·연 ${S.r}% 가정`:"");
+  const multi = n>1;
+  // [항목, 금액, 하위행 여부, 색, 아래 작은 글씨(자녀 2명 이상일 때 합계)]
+  const rows = ok ? [
+    ["예상 상속세", won(baseline.total), 0, "#1c1c1e", ""],
+    ["추천 증여액 (자녀 1인당)", won(rec.x), 0, "#16803c", multi?`자녀 ${n}명 합계 ${won(rec.x*n)}`:""],
+    ["└ 증여세 (1인당)", won(rec.gtChild), 1, "#1c1c1e", multi?`${n}명 합계 ${won(rec.gtChild*n)}`:""],
+    ["└ 증여 후 상속세", won(rec.inh), 1, "#1c1c1e", ""],
+    ["사전증여 상한선 (총액)", won(cap.x*n), 0, "#d32626", multi?`자녀 1인당 ${won(cap.x)}`:""],
+  ] : [["예상 상속세", won(baseline.total), 0, "#1c1c1e", ""]];
+  const rowH = r => r[4] ? 104 : 72;
+
+  // 높이 계산: 상단 띠 168 → 조건·절세액 박스 → 결과 행 → 그래프 → 하단 띠 112
+  const k=(W-2*P)/340, chartH=266*k;
+  const rowsEnd = 500 + rows.reduce((s,r)=>s+rowH(r),0);
+  const chartTop = rowsEnd + 56;
+  const H = ok ? chartTop + 24 + chartH + 40 + 112 : rowsEnd + 40 + 112;
+  const c=document.createElement("canvas"); c.width=W; c.height=Math.round(H);
+  const g=c.getContext("2d");
+
+  const texts = ["자녀 1인당 증여액에 따른 총세금","자녀 1인당 증여액 →","추천상한선증여세 계단상속세 계단증여 안 할 때증상","사전증여 처방전","상속세 절세액","증여 효과 없음","이 조건에서는 미리 증여해도 세금이 줄지 않습니다","노노상속연구소","│ 김하나 세무사","0123456789.%억만,","문의 02-6925-4534","2026년 현행 세법 기준 참고용 추정치 · 개별 상황은 상담 필요", cond, won(save), ...rows.flat()].join("");
+  try{ await Promise.all(["400","500","600","700","800"].map(w=>document.fonts.load(F(w,40), texts))); }catch(e){}
+
+  // 배경
+  g.fillStyle="#f5f3ee"; g.fillRect(0,0,W,H);
+  // 상단 띠: 제목만
+  g.fillStyle="#0e1628"; g.fillRect(0,0,W,168);
+  g.fillStyle="#fff"; g.font=F(800,48); g.textBaseline="middle"; g.textAlign="left";
+  g.fillText("사전증여 처방전", P, 86);
+
+  // 입력 조건
+  g.fillStyle="#5d5d63"; g.font=F(700, cond.length>34?28:32);
+  g.fillText(cond, P, 222);
+
+  // 절세액 박스
+  rr(g,P,262,W-2*P,200,28); g.fillStyle= ok?"#dcf7e4":"#ece9e1"; g.fill();
+  g.fillStyle= ok?"#16803c":"#5d5d63";
+  if(ok){
+    g.font=F(800,34); g.fillText("상속세 절세액", P+40, 320);
+    g.font=F(800,96); g.fillText(won(save), P+40, 405);
+  } else {
+    g.font=F(800,64); g.fillText("증여 효과 없음", P+40, 335);
+    g.font=F(600,30); g.fillText("이 조건에서는 미리 증여해도 세금이 줄지 않습니다", P+40, 405);
+  }
+
+  // 결과 행
+  let y=500;
+  rows.forEach((r,i)=>{
+    const [k2,v,child,col,sub]=r, cy=y+36;
+    g.textAlign="left"; g.fillStyle="#5d5d63"; g.font=F(child?500:600, child?30:33);
+    let kx=P+(child?34:0);
+    if(i===1||k2.startsWith("사전증여")){ g.fillStyle=col; g.beginPath(); g.arc(P+10,cy,10,0,7); g.fill(); kx=P+32; g.fillStyle="#5d5d63"; }
+    g.fillText(k2, kx, cy);
+    g.textAlign="right"; g.fillStyle=col; g.font=F(800, child?34:40); g.fillText(v, W-P, cy);
+    if(sub){ g.fillStyle="#5d5d63"; g.font=F(600,26); g.fillText(sub, W-P, cy+40); }
+    y+=rowH(r);
+    if(i<rows.length-1){ g.strokeStyle="#e3e0d7"; g.lineWidth=2; g.beginPath(); g.moveTo(P,y); g.lineTo(W-P,y); g.stroke(); }
+  });
+
+  // 총세금 그래프 (페이지 그래프와 같은 좌표계 340×250을 확대해서 그림)
+  if(ok){
+    g.textBaseline="middle"; g.textAlign="left"; g.fillStyle="#5d5d63"; g.font=F(700,26);
+    g.fillText("자녀 1인당 증여액에 따른 총세금", P, chartTop);
+    rr(g,P,chartTop+24,W-2*P,chartH,22); g.fillStyle="#fff"; g.fill();
+    g.save(); g.translate(P, chartTop+24); g.scale(k,k);
+    drawChartOn(g, F);
+    g.restore();
+  }
+
+  // 하단 띠 (사이트 풋바와 같은 남색)
+  g.textBaseline="middle";
+  g.fillStyle="#0e1628"; g.fillRect(0,H-112,W,112);
+  g.textAlign="left"; g.fillStyle="#fff"; g.font=F(800,30); g.fillText("노노상속연구소", P, H-74);
+  const bw=g.measureText("노노상속연구소").width;
+  g.fillStyle="#c9d1e0"; g.font=F(600,28); g.fillText("  │  김하나 세무사", P+bw, H-74);
+  g.textAlign="right"; g.fillStyle="#d9b88a"; g.font=F(800,30); g.fillText("문의 02-6925-4534", W-P, H-74);
+  g.textAlign="left"; g.fillStyle="#9aa6bd"; g.font=F(500,20); g.fillText("2026년 현행 세법 기준 참고용 추정치 · 개별 상황은 상담 필요", P, H-32);
+  return c;
+}
+
+/* ===== 처방 카드 이미지 (1080×1350, 4:5) ===== */
+async function makeSummaryCard(){
+  const W=1080, H=1350, P=64;
+  const {baseline, rec, cap}=M, n=S.c;
+  const save = baseline.total - rec.total, ok = save >= 1;
+  const pctCut = baseline.total>0 ? Math.round(save/baseline.total*100) : 0;
+  const F=(w,s)=>`${w} ${s}px ${IMG_FONT}`;
+  const cond = `상속재산 ${eok(S.e)} · 배우자 ${S.sp?"있음":"없음"} · 자녀 ${n}명` + (S.d?` · ${S.y}년 내 사망 가정`:"");
+  const giftLbl = M.fx>0 ? "증여세 합계" : (n>1?`증여세 (${n}명 합계)`:"증여세");
+  const zero = baseline.total < 1; // 상속공제 범위 안이라 상속세가 없는 경우
+  const head1 = ok ? (n>1?`자녀 ${n}명에게`:"자녀에게") : (zero ? "상속공제 범위 안이라" : "이 조건에서는 미리 증여해도");
+  const head2 = ok ? `${won(rec.x)}${n>1?"씩":"을"} 미리 증여하면` : (zero ? "상속세가 나오지 않습니다" : "세금이 줄지 않습니다");
+  const c=document.createElement("canvas"); c.width=W; c.height=H;
+  const g=c.getContext("2d");
+  const texts=["사전증여 처방전","자녀에게명씩을 미리 증여하면","이 조건에서는 미리 증여해도세금이 줄지 않습니다","절약","감소▼","증여 안 할 때","미리 증여 시","증여세상속세","증여 후 상속세","사전증여 상한선","합계","⚠ 10년 안에 상속이 생기면 절세 효과가 줄어듭니다","10년 내 합산을 반영한 결과입니다","상담으로 다른 절세 방법을 확인해 보세요","상속공제 범위 안이라상속세가 나오지 않습니다","확인해 볼 점현재 상속공제 안에 있습니다재산이 늘거나 공제 요건이 달라지면 세금이 생길 수 있습니다배우자의 2차 상속까지 보면 결과가 달라질 수 있습니다미리 증여해도 총세금이 같거나 늘어나는 조건입니다상속 시점과 재산 상승률에 따라 결과가 달라집니다재산 구성에 맞는 다른 절세 방법을 상담해 보세요","재산이 늘어날 예정이라면 상담으로 미리 확인해 보세요","예상 상속세","노노상속연구소","│ 김하나 세무사","문의 02-6925-4534","2026년 현행 세법 기준 참고용 추정치 · 개별 상황은 상담 필요","0123456789.,%억만원 ()",cond,head1,head2,giftLbl].join("");
+  try{ await Promise.all(["500","600","700","800"].map(w=>document.fonts.load(F(w,40), texts))); }catch(e){}
+  g.textBaseline="middle";
+
+  // 배경 + 상단 띠
+  g.fillStyle="#f5f3ee"; g.fillRect(0,0,W,H);
+  g.fillStyle="#0e1628"; g.fillRect(0,0,W,180);
+  g.textAlign="left"; g.fillStyle="#fff"; g.font=F(800,46); g.fillText("사전증여 처방전", P, 70);
+  g.fillStyle="#c9d1e0"; g.font=F(600,28); g.fillText(cond, P, 130);
+
+  // 글자가 칸을 넘으면 크기를 줄여서 맞춤
+  const fit=(txt,w,size,max)=>{ let s=size; g.font=F(w,s); while(s>16 && g.measureText(txt).width>max){ s-=2; g.font=F(w,s); } return s; };
+  const CW=W-2*P;
+
+  // 결론 문장
+  g.fillStyle="#1c1c1e"; fit(head1,700,42,CW); g.fillText(head1, P, 250);
+  if(ok){
+    const amt = won(rec.x); fit(head2,800,56,CW);
+    g.fillStyle="#16803c"; g.fillText(amt, P, 318);
+    const aw=g.measureText(amt).width;
+    g.fillStyle="#1c1c1e"; g.fillText(head2.slice(amt.length), P+aw, 318);
+  } else { g.font=F(800,56); g.fillText(head2, P, 318); }
+
+  // 큰 숫자
+  if(ok){
+    const big = won(save).replace(" 원","");
+    let bs=128; for(;bs>60;bs-=4){ g.font=F(800,Math.round(bs*0.44)); const tw=g.measureText("원 절약").width; g.font=F(800,bs); if(g.measureText(big).width+14+tw<=CW) break; }
+    g.fillStyle="#16803c"; g.font=F(800,bs); g.fillText(big, P-4, 450);
+    const bw=g.measureText(big).width;
+    g.font=F(800,Math.round(bs*0.44)); g.fillText("원 절약", P+bw+14, 450+bs*0.125);
+    // % 배지
+    const badge=`▼ ${pctCut}% 감소`; g.font=F(800,30);
+    const tw=g.measureText(badge).width;
+    rr(g,P,520,tw+40,54,27); g.fillStyle="#dcf7e4"; g.fill();
+    g.fillStyle="#16803c"; g.fillText(badge, P+20, 548);
+  } else {
+    g.fillStyle="#5d5d63"; g.font=F(700,32); g.fillText("예상 상속세", P, 420);
+    g.fillStyle="#1c1c1e"; g.font=F(800,96); g.fillText(won(baseline.total), P-4, 500);
+  }
+
+  // 전후 막대 비교
+  // 막대 옆 금액 칸 너비를 실제 글자 길이로 잡고, 금액은 오른쪽 끝에 맞춰 정렬
+  g.font=F(800,40);
+  const valW = Math.max(g.measureText(taxShort(baseline.total)).width, g.measureText(taxShort(rec.total)).width);
+  const bx=P, bwid=CW-valW-28, maxV=Math.max(baseline.total, rec.total)||1;
+  const bar=(y,label,parts,total,col)=>{
+    g.textAlign="left"; g.fillStyle="#5d5d63"; g.font=F(700,30); g.fillText(label, bx, y);
+    let x=bx; const by=y+28, bh=58;
+    rr(g,bx,by,bwid,bh,14); g.fillStyle="#ece9e1"; g.fill();
+    g.save(); rr(g,bx,by,bwid,bh,14); g.clip();
+    parts.forEach(([v,cl])=>{ const w=bwid*v/maxV; g.fillStyle=cl; g.fillRect(x,by,w,bh); x+=w; });
+    g.restore();
+    g.textAlign="right"; g.fillStyle=col; g.font=F(800,40); g.fillText(taxShort(total), W-P, by+bh/2);
+  };
+  const by0 = ok ? 640 : 600;
+  if(!zero) bar(by0, "증여 안 할 때", [[baseline.total,"#5d5d63"]], baseline.total, "#1c1c1e");
+  if(ok){
+    bar(by0+130, "미리 증여 시", [[rec.giftTax,"#2458d6"],[rec.inh,"#d9480f"]], rec.total, "#16803c");
+    // 범례
+    let lx=bx; const ly=by0+130+28+58+34; g.font=F(600,26);
+    [["증여세 "+taxShort(rec.giftTax),"#2458d6"],["상속세 "+taxShort(rec.inh),"#d9480f"]].forEach(([s,cl])=>{
+      g.fillStyle=cl; g.fillRect(lx,ly-11,22,22); g.fillStyle="#5d5d63"; g.textAlign="left"; g.fillText(s, lx+32, ly); lx+=32+g.measureText(s).width+36; });
+  }
+
+  // 효과가 없는 경우: 가운데에 확인해 볼 점
+  if(!ok){
+    const tips = zero ? [
+      `현재 상속공제 ${won(baseline.Draw)} 안에 있습니다`,
+      "재산이 늘거나 공제 요건이 달라지면 세금이 생길 수 있습니다",
+      "배우자의 2차 상속까지 보면 결과가 달라질 수 있습니다",
+    ] : [
+      "미리 증여해도 총세금이 같거나 늘어나는 조건입니다",
+      "상속 시점과 재산 상승률에 따라 결과가 달라집니다",
+      "재산 구성에 맞는 다른 절세 방법을 상담해 보세요",
+    ];
+    const ty = zero ? 600 : 760, th = 1100-ty;
+    rr(g,P,ty,W-2*P,th,24); g.fillStyle="#fff"; g.fill();
+    g.textAlign="left"; g.fillStyle="#1c1c1e"; g.font=F(800,34); g.fillText("확인해 볼 점", P+40, ty+64);
+    const gap=(th-130)/tips.length;
+    tips.forEach((t,i)=>{ const yy=ty+130+gap*i+gap/2-10;
+      g.beginPath(); g.arc(P+52,yy,8,0,7); g.fillStyle="#d9b88a"; g.fill();
+      g.fillStyle="#3a3a40"; g.font=F(600,30); g.fillText(t, P+78, yy); });
+  }
+
+  // 근거 숫자 칩 3개
+  if(ok){
+    const cy=980, cw=(W-2*P-32)/3, ch=128;
+    [[giftLbl, taxShort(rec.giftTax), "#1c1c1e"],["증여 후 상속세", taxShort(rec.inh), "#1c1c1e"],["사전증여 상한선", taxShort(cap.x*n), "#d32626"]].forEach(([k,v,col],i)=>{
+      const x=P+i*(cw+16); rr(g,x,cy,cw,ch,20); g.fillStyle="#fff"; g.fill();
+      g.textAlign="center"; g.fillStyle="#5d5d63"; g.font=F(600,24); g.fillText(k, x+cw/2, cy+40);
+      g.fillStyle=col; fit(v,800,38,cw-28); g.fillText(v, x+cw/2, cy+88);
+    });
+  }
+
+  // 주의 한 줄
+  const wy=1140, wtxt = !ok ? (zero ? "재산이 늘어날 예정이라면 상담으로 미리 확인해 보세요" : "상담으로 다른 절세 방법을 확인해 보세요") : (S.d ? "10년 내 합산을 반영한 결과입니다" : "⚠ 10년 안에 상속이 생기면 절세 효과가 줄어듭니다");
+  rr(g,P,wy,W-2*P,72,18); g.fillStyle="#fff1d6"; g.fill();
+  g.textAlign="left"; g.fillStyle="#b45309"; g.font=F(700,28); g.fillText(wtxt, P+28, wy+36);
+
+  // 하단 띠
+  g.fillStyle="#0e1628"; g.fillRect(0,H-112,W,112);
+  g.textAlign="left"; g.fillStyle="#fff"; g.font=F(800,30); g.fillText("노노상속연구소", P, H-74);
+  const nw=g.measureText("노노상속연구소").width;
+  g.fillStyle="#c9d1e0"; g.font=F(600,28); g.fillText("  │  김하나 세무사", P+nw, H-74);
+  g.textAlign="right"; g.fillStyle="#d9b88a"; g.font=F(800,30); g.fillText("문의 02-6925-4534", W-P, H-74);
+  g.textAlign="left"; g.fillStyle="#9aa6bd"; g.font=F(500,20); g.fillText("2026년 현행 세법 기준 참고용 추정치 · 개별 상황은 상담 필요", P, H-32);
+  return c;
+}
+
 /* ===== 공유 / 상담 ===== */
-function toast(msg){ const t=$('toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove('show'),2600); }
+function toast(msg){ const t=$('toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove('show'),msg.length>40?4500:2600); }
 async function copy(text){ try{ await navigator.clipboard.writeText(text); return true; }catch(e){ return false; } }
 function summary(){
   const {baseline, rec, cap}=M;
-  return `[사전증여 시뮬레이션]\n재산 ${won(S.e)} / 배우자 ${S.sp?'있음':'없음'} / 자녀 ${S.c}명`+
-    (S.d?`\n${S.y}년 내 사망·연 ${S.r}% 상승 가정`:'')+
-    `\n예상 상속세 ${won(baseline.total)}\n추천 증여액(자녀 1인당) ${won(rec.x)}\n상속세 절세액 ${won(baseline.total-rec.total)}\n사전증여 상한선(총액) ${won(cap.x*S.c)}\n${location.href}`;
+  return `[사전증여 처방전]
+재산 ${won(S.e)} / 배우자 ${S.sp?'있음':'없음'} / 자녀 ${S.c}명`+
+    (S.d?`
+${S.y}년 내 사망·연 ${S.r}% 상승 가정`:'')+
+    `
+예상 상속세 ${won(baseline.total)}
+추천 증여액(자녀 1인당) ${won(rec.x)}
+상속세 절세액 ${won(baseline.total-rec.total)}
+사전증여 상한선(총액) ${won(cap.x*S.c)}
+${shareURL()}`;
 }
-$('shareBtn').addEventListener('click', async ()=>{
-  const data={title:'사전증여 시뮬레이터', text:'우리 가족 사전증여 계산 결과', url:location.href};
+
+// 결과 이미지는 입력이 바뀔 때마다 미리 만들어 둠 (버튼을 누르는 순간 바로 공유 창을 열기 위해)
+const IMG_NAME = '사전증여_처방전.png';
+let imgBlob = null, imgTimer = 0, imgJob = 0;
+function scheduleImage(){
+  imgBlob = null; clearTimeout(imgTimer);
+  const job = ++imgJob;
+  imgTimer = setTimeout(async ()=>{
+    try{
+      const c = await makeSummaryCard();
+      const blob = await new Promise(r=>c.toBlob(r,'image/png'));
+      if(job===imgJob) imgBlob = blob;
+    }catch(e){ console.warn('결과 이미지 생성 실패', e); }
+  }, 400);
+}
+async function getImage(){
+  if(imgBlob) return imgBlob;
+  const c = await makeSummaryCard();
+  return await new Promise(r=>c.toBlob(r,'image/png'));
+}
+function saveImage(blob){
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=IMG_NAME;
+  document.body.appendChild(a); a.click();
+  setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 1500);
+}
+
+// 맨 위 공유 버튼: 처방전 페이지 링크만 공유 (받는 사람은 처음 화면에서 시작)
+$('linkShareBtn').addEventListener('click', async ()=>{
+  const data = {title:'사전증여 처방전', text:'우리 가족은 얼마를 미리 증여해야 세금이 가장 적을까?', url:SITE_URL};
   if(navigator.share){ try{ await navigator.share(data); return; }catch(e){ if(e.name==='AbortError') return; } }
-  toast(await copy(location.href) ? '링크가 복사되었습니다. 카톡에 붙여넣어 보내세요.' : '주소창의 링크를 복사해 보내주세요.');
+  toast(await copy(SITE_URL) ? '링크가 복사되었습니다. 카톡이나 문자에 붙여넣어 공유하세요.' : SITE_URL);
 });
+
+// 가족들에게 결과 보내기: 이미지 + 링크를 공유 창으로 (안 되면 이미지 저장 + 링크 복사)
+$('shareBtn').addEventListener('click', async ()=>{
+  const url = shareURL();
+  const ready = imgBlob;
+  if(ready && navigator.canShare){
+    const file = new File([ready], IMG_NAME, {type:'image/png'});
+    if(navigator.canShare({files:[file]})){
+      copy(url); // 카톡이 문장을 빼먹는 경우를 대비해 링크도 복사
+      try{ await navigator.share({files:[file], title:'사전증여 처방전', text:'우리 가족 사전증여 계산 결과\n'+url}); return; }
+      catch(e){ if(e.name==='AbortError') return; }
+    }
+  }
+  const blob = ready || await getImage();
+  saveImage(blob);
+  const ok = await copy(url);
+  toast(ok ? '결과 이미지를 저장하고 링크를 복사했습니다. 카톡에 함께 보내세요.' : '결과 이미지를 저장했습니다. 주소창의 링크도 함께 보내세요.');
+});
+
+// 사전증여 상담 신청: 이미지 저장 + 요약 복사 → 카카오톡 채널 채팅 열기
 $('ctaBtn').addEventListener('click', async ()=>{
-  const ok = await copy(summary());
-  if(CONSULT_URL){ toast(ok?'결과가 복사되었습니다. 상담 창에 붙여넣어 주세요.':'상담 창으로 이동합니다.'); setTimeout(()=>{ location.href=CONSULT_URL; }, 900); }
-  else toast(ok?'결과가 복사되었습니다. (상담 링크 준비 중)':'상담 링크 준비 중입니다.');
+  const okCopy = copy(summary());
+  try{ saveImage(imgBlob || await getImage()); }catch(e){}
+  const ok = await okCopy;
+  if(CONSULT_URL){
+    toast('결과 이미지를 저장했습니다. 채팅방에서 + → 사진으로 첨부하고'+(ok?' 복사된 요약을 붙여넣어':'')+' 보내주세요.');
+    setTimeout(()=>{ location.href=CONSULT_URL; }, 1800);
+  } else toast('상담 링크 준비 중입니다.');
 });
 
 update();
