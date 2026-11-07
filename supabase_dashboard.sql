@@ -3,7 +3,7 @@
 
 -- 1) 관리자 명단: 여기 있는 이메일로 로그인한 사람만 신청·통계를 볼 수 있음
 create table if not exists public.admins (email text primary key);
-insert into public.admins(email) values ('taxmission903@gmail.com') on conflict do nothing;
+insert into public.admins(email) values ('taxmission903@gmail.com'), ('nono@nono.admin') on conflict do nothing;
 alter table public.admins enable row level security;
 revoke all on public.admins from anon, authenticated;
 
