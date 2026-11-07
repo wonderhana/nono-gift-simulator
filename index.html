@@ -324,6 +324,7 @@ details[open] summary{margin-bottom:12px}
 
   <div class="disclaimer">
     <p><b>2026년 현행 세법 기준, 개별 상황은 상담 필요</b></p>
+    <p>이용 통계는 개인을 알아볼 수 없는 형태(이용 횟수·유입 경로·기기 종류)로만 수집합니다.</p>
     <p>본 결과는 입력한 내용을 토대로 계산한 참고용 추정치이며, 배우자가 이후 다시 상속하는 경우(2차 상속)는 반영하지 않습니다. 실제 세액은 재산 평가·공제 요건에 따라 달라질 수 있어 법적 효력이나 세무 신고의 근거가 되지 않습니다.</p>
   </div>
 </div>
@@ -673,6 +674,7 @@ function update(){
   compute(); sel = M.rec.x;
   syncInputs(); renderResults(); renderChart(); renderExplore(); renderSpread(); writeURL();
   scheduleImage();
+  if(booted) track('simulate');
 }
 function setSel(v){
   sel = Math.max(0, Math.min(M.xmax, Math.round(v/STEP)*STEP));
@@ -999,6 +1001,7 @@ function saveImage(blob){
 
 // 맨 위 공유 버튼: 처방전 페이지 링크만 공유 (받는 사람은 처음 화면에서 시작)
 $('linkShareBtn').addEventListener('click', async ()=>{
+  track('share_link');
   const data = {title:'사전증여 처방전', text:'우리 가족은 얼마를 미리 증여해야 세금이 가장 적을까?', url:SITE_URL};
   if(navigator.share){ try{ await navigator.share(data); return; }catch(e){ if(e.name==='AbortError') return; } }
   toast(await copy(SITE_URL) ? '링크가 복사되었습니다. 카톡이나 문자에 붙여넣어 공유하세요.' : SITE_URL);
@@ -1006,6 +1009,7 @@ $('linkShareBtn').addEventListener('click', async ()=>{
 
 // 가족들에게 결과 보내기: 이미지 + 링크를 공유 창으로 (안 되면 이미지 저장 + 링크 복사)
 $('shareBtn').addEventListener('click', async ()=>{
+  track('share_family');
   const url = shareURL();
   const ready = imgBlob;
   if(ready && navigator.canShare){
@@ -1024,6 +1028,7 @@ $('shareBtn').addEventListener('click', async ()=>{
 
 // 내려받기: 처방 카드 이미지를 파일로 저장
 $('dlBtn').addEventListener('click', async ()=>{
+  track('download');
   try{
     saveImage(imgBlob || await getImage());
     toast('처방전 이미지를 저장했습니다.');
@@ -1033,6 +1038,7 @@ $('dlBtn').addEventListener('click', async ()=>{
 // 사전증여 상담 신청
 // Supabase 설정이 있으면 신청서 → 바로 접수. 없으면 요약 복사 → 카카오톡 채널 채팅
 function kakaoFallback(){
+  track('kakao_click');
   copy(summary()).then(ok=>{
     toast(ok ? '결과 요약이 복사되었습니다. 채팅창을 길게 눌러 붙여넣고 보내주세요.' : '상담 채팅방으로 이동합니다.');
     setTimeout(()=>{ location.href=CONSULT_URL; }, ok?1500:600);
@@ -1052,6 +1058,7 @@ $('cKakao').href = CONSULT_URL || '#';
 // 카카오톡으로 문의하기: 신청서에 적은 내용 + 계산 결과를 복사한 뒤 채널 채팅방 열기 (카카오는 자동 입력을 막아 붙여넣기 1번 필요)
 $('cKakao').addEventListener('click', async e=>{
   e.preventDefault();
+  track('kakao_click');
   if(!CONSULT_URL) return;
   const name=$('cName').value.trim(), phone=$('cPhone').value.trim(), memo=$('cMemo').value.trim();
   const who=[name&&`이름: ${name}`, phone&&`연락처: ${phone}`, memo&&`문의: ${memo}`].filter(Boolean).join('\n');
@@ -1061,6 +1068,7 @@ $('cKakao').addEventListener('click', async e=>{
   setTimeout(()=>{ location.href=CONSULT_URL; }, ok?1500:600);
 });
 $('ctaBtn').addEventListener('click', ()=>{
+  track('consult_open');
   if(!SUPABASE_URL || !SUPABASE_KEY || !dlg.showModal){ kakaoFallback(); return; }
   $('consultForm').hidden=false; $('consultDone').hidden=true; $('cErr').hidden=true;
   $('dlgSum').textContent = summary().split('\n').slice(1,-1).join('\n');
@@ -1087,6 +1095,7 @@ $('consultForm').addEventListener('submit', async e=>{
     const res=await fetch(SUPABASE_URL.replace(/\/$/,'')+'/rest/v1/consult_requests', {method:'POST', headers, body:JSON.stringify({name, phone, memo:memo||null, consent:true, ...consultPayload()})});
     if(!res.ok) throw new Error(res.status+' '+await res.text());
     $('consultForm').hidden=true; $('consultDone').hidden=false;
+    track('consult_submit');
     $('consultForm').reset();
   }catch(ex){
     console.warn('상담 신청 실패', ex);
@@ -1094,7 +1103,48 @@ $('consultForm').addEventListener('submit', async e=>{
   }finally{ btn.disabled=false; btn.textContent='신청하기'; }
 });
 
+/* ===== 이용 통계 (개인을 알아볼 수 없는 정보만: 이벤트 종류, 유입 경로, 기기, 재산 구간) ===== */
+let booted = false;
+const SESSION_ID = (()=>{
+  const make = ()=> (crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2)+Date.now().toString(36)).slice(0,36);
+  try{ let s=sessionStorage.getItem('nono_sid'); if(!s){ s=make(); sessionStorage.setItem('nono_sid', s); } return s; }catch(e){ return make(); }
+})();
+function trafficSource(){
+  const q = new URLSearchParams(location.search).get('utm_source');
+  if(q) return q.toLowerCase().slice(0,60);
+  if(/KAKAOTALK/i.test(navigator.userAgent)) return 'kakao';
+  let host=''; try{ host = document.referrer ? new URL(document.referrer).hostname : ''; }catch(e){}
+  if(!host || host===location.hostname) return 'direct';
+  if(/youtube\.|youtu\.be/.test(host)) return 'youtube';
+  if(/kakao/.test(host)) return 'kakao';
+  if(/google\./.test(host)) return 'google';
+  if(/naver\./.test(host)) return 'naver';
+  if(/daum\./.test(host)) return 'daum';
+  if(/facebook\.|instagram\./.test(host)) return 'sns';
+  return host.slice(0,60);
+}
+function estateBand(){
+  const e=S.e/10000;
+  return e<10?'10억 미만': e<30?'10~30억': e<50?'30~50억': e<100?'50~100억':'100억 이상';
+}
+const sentOnce = new Set();
+function track(event){
+  if(!SUPABASE_URL || !SUPABASE_KEY) return;
+  if(location.protocol==='file:' || /^(localhost|127\.0\.0\.1)$/.test(location.hostname)) return; // 테스트 중 기록 안 함
+  if((event==='visit' || event==='simulate') && sentOnce.has(event)) return;               // 방문·시뮬레이션은 한 번만
+  sentOnce.add(event);
+  const body = {session_id:SESSION_ID, event, source:trafficSource(),
+    device: matchMedia('(pointer:coarse)').matches ? 'mobile' : 'desktop',
+    estate_band: estateBand(), children:S.c, spouse:!!S.sp};
+  const headers={'apikey':SUPABASE_KEY, 'Content-Type':'application/json', 'Prefer':'return=minimal'};
+  if(SUPABASE_KEY.startsWith('eyJ')) headers.Authorization='Bearer '+SUPABASE_KEY;
+  try{ fetch(SUPABASE_URL.replace(/\/$/,'')+'/rest/v1/page_events', {method:'POST', headers, body:JSON.stringify(body), keepalive:true}).catch(()=>{}); }catch(e){}
+}
+document.querySelector('.head-btn.yt').addEventListener('click', ()=>track('youtube_click'));
+
 update();
+booted = true;
+track('visit');
 </script>
 </body>
 </html>

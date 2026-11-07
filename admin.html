@@ -1,0 +1,375 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>처방전 관리자</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<style>
+:root{
+  --bg:#f5f3ee; --card:#fff; --ink:#1c1c1e; --sub:#5d5d63; --muted:#8a8a90; --line:#e3e0d7; --soft:#f0eee8;
+  --navy:#0e1628; --gold:#d9b88a; --bar:#2f3b57; --bar-hi:#0e1628;
+  --good:#16803c; --good-soft:#dcf7e4; --warn:#b45309; --warn-soft:#fff1d6; --bad:#d32626;
+}
+*{box-sizing:border-box}
+html{font-size:16px}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Pretendard Variable",Pretendard,-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;line-height:1.5;word-break:keep-all}
+header{background:var(--navy);color:#fff}
+header .in{max-width:1100px;margin:0 auto;padding:16px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+header h1{margin:0;font-size:1.15rem;font-weight:800}
+header h1 small{color:var(--gold);font-weight:700;margin-left:6px}
+header .who{font-size:.8rem;color:#c9d1e0;display:flex;align-items:center;gap:10px}
+.wrap{max-width:1100px;margin:0 auto;padding:16px}
+.btn{font:inherit;font-weight:700;font-size:.85rem;border:1.5px solid var(--line);background:#fff;color:var(--ink);border-radius:999px;padding:7px 14px;cursor:pointer}
+.btn.dark{background:var(--navy);border-color:var(--navy);color:#fff}
+.btn.ghost{background:transparent;color:#c9d1e0;border-color:#33405e}
+.card{background:var(--card);border-radius:16px;padding:18px;margin-bottom:14px;box-shadow:0 1px 2px rgba(0,0,0,.05)}
+.card h2{margin:0 0 12px;font-size:1rem}
+.card h2 small{font-weight:500;color:var(--muted);margin-left:6px;font-size:.8rem}
+/* 로그인 */
+.login{max-width:420px;margin:60px auto}
+.login p{color:var(--sub);font-size:.9rem}
+.login input{width:100%;font:inherit;font-size:1rem;border:2px solid var(--line);border-radius:12px;padding:12px 14px;margin:6px 0 12px}
+.login .btn{width:100%;padding:14px;font-size:1rem;border-radius:12px}
+.msg{font-size:.85rem;margin-top:10px}
+.msg.err{color:var(--bad)} .msg.ok{color:var(--good)}
+/* 기간 */
+.bar-row{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+.seg{display:inline-flex;background:#fff;border:1.5px solid var(--line);border-radius:999px;padding:3px}
+.seg button{font:inherit;font-size:.85rem;font-weight:700;border:0;background:transparent;color:var(--sub);padding:6px 14px;border-radius:999px;cursor:pointer}
+.seg button[aria-pressed=true]{background:var(--navy);color:#fff}
+.updated{font-size:.75rem;color:var(--muted)}
+/* KPI */
+.kpis{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-bottom:14px}
+.kpi{background:var(--card);border-radius:14px;padding:14px 16px;box-shadow:0 1px 2px rgba(0,0,0,.05)}
+.kpi span{display:block;font-size:.78rem;color:var(--sub);font-weight:600}
+.kpi b{display:block;font-size:1.6rem;font-weight:800;margin-top:2px;font-variant-numeric:tabular-nums}
+.kpi em{font-style:normal;font-size:.75rem;color:var(--muted)}
+.kpi.hi{background:var(--navy);color:#fff}
+.kpi.hi span,.kpi.hi em{color:#c9d1e0}
+.kpi.hi b{color:var(--gold)}
+.grid2{display:grid;grid-template-columns:1fr;gap:14px}
+@media (min-width:860px){.grid2{grid-template-columns:1.4fr 1fr}}
+.grid2 .card{margin:0}
+/* 차트 */
+.chart{position:relative}
+.chart svg{display:block;width:100%;height:auto}
+.tip{position:absolute;pointer-events:none;background:var(--navy);color:#fff;font-size:.78rem;padding:6px 10px;border-radius:8px;white-space:nowrap;transform:translate(-50%,-110%);opacity:0;transition:opacity .1s}
+.hbars{display:grid;gap:8px}
+.hb{display:grid;grid-template-columns:110px 1fr 64px;align-items:center;gap:10px;font-size:.85rem}
+.hb .lbl{color:var(--sub);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hb .trk{display:block;height:14px;background:var(--soft);border-radius:4px;overflow:hidden}
+.hb .fill{display:block;height:100%;background:var(--bar);border-radius:0 4px 4px 0}
+.hb .num{text-align:right;font-weight:700;font-variant-numeric:tabular-nums}
+.hb .num small{display:block;font-weight:500;color:var(--muted);font-size:.72rem}
+.empty{color:var(--muted);font-size:.85rem;padding:8px 0}
+.split{display:grid;gap:18px}
+@media (min-width:700px){.split{grid-template-columns:1fr 1fr 1fr}}
+.split h3{font-size:.85rem;margin:0 0 8px;color:var(--sub)}
+/* 신청 목록 */
+.req-tools{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+.chip{font:inherit;font-size:.8rem;font-weight:700;border:1.5px solid var(--line);background:#fff;color:var(--sub);border-radius:999px;padding:5px 12px;cursor:pointer}
+.chip[aria-pressed=true]{background:var(--ink);border-color:var(--ink);color:#fff}
+.req{border:1.5px solid var(--line);border-radius:14px;padding:14px 16px;margin-bottom:10px}
+.req.new{border-color:var(--gold);background:#fffaf1}
+.req-top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap}
+.req-name{font-weight:800;font-size:1.05rem}
+.req-name a{color:var(--ink);font-weight:700;margin-left:8px;font-size:.95rem}
+.req-time{font-size:.75rem;color:var(--muted)}
+.req select{font:inherit;font-size:.85rem;font-weight:700;border:1.5px solid var(--line);border-radius:10px;padding:6px 10px;background:#fff}
+.req-facts{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+.fact{font-size:.78rem;background:var(--soft);border-radius:8px;padding:4px 9px;color:var(--sub)}
+.fact b{color:var(--ink)}
+.fact.save{background:var(--good-soft);color:var(--good)}
+.fact.save b{color:var(--good)}
+.req-memo{font-size:.9rem;background:var(--warn-soft);border-radius:10px;padding:8px 12px;margin:0 0 8px;white-space:pre-wrap}
+.req details{font-size:.8rem;color:var(--sub)}
+.req details pre{white-space:pre-wrap;font-family:inherit;margin:6px 0 0;background:var(--soft);padding:8px 10px;border-radius:8px}
+.req .links{font-size:.8rem;margin-top:6px}
+.req .links a{color:var(--sub)}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<header><div class="in">
+  <h1>사전증여 처방전<small>관리자</small></h1>
+  <div class="who" id="who" hidden><span id="whoEmail"></span><button class="btn ghost" id="logoutBtn" type="button">로그아웃</button></div>
+</div></header>
+
+<!-- 로그인 -->
+<section class="wrap" id="loginView" hidden>
+  <div class="card login">
+    <h2>관리자 로그인</h2>
+    <p>등록된 관리자 이메일을 넣으면 로그인 링크를 보내드립니다. 메일의 링크를 누르면 이 화면으로 돌아옵니다.</p>
+    <form id="loginForm">
+      <input type="email" id="loginEmail" autocomplete="email" placeholder="이메일 주소" required>
+      <button class="btn dark" type="submit" id="loginBtn">로그인 링크 받기</button>
+    </form>
+    <p class="msg" id="loginMsg" hidden></p>
+  </div>
+</section>
+
+<!-- 권한 없음 -->
+<section class="wrap" id="denyView" hidden>
+  <div class="card login"><h2>접근 권한이 없습니다</h2><p>이 이메일은 관리자로 등록되어 있지 않습니다. 관리자 이메일로 다시 로그인해 주세요.</p></div>
+</section>
+
+<!-- 대시보드 -->
+<main class="wrap" id="dashView" hidden>
+  <div class="bar-row">
+    <div class="seg" id="rangeSeg" role="group" aria-label="기간">
+      <button type="button" data-d="1">오늘</button>
+      <button type="button" data-d="7" aria-pressed="true">7일</button>
+      <button type="button" data-d="30">30일</button>
+      <button type="button" data-d="90">90일</button>
+      <button type="button" data-d="0">전체</button>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <span class="updated" id="updated"></span>
+      <button class="btn" type="button" id="refreshBtn">새로고침</button>
+    </div>
+  </div>
+
+  <div class="kpis" id="kpis"></div>
+
+  <div class="grid2">
+    <section class="card">
+      <h2>일별 방문자<small>방문한 사람(세션) 수</small></h2>
+      <div class="chart" id="dailyChart"></div>
+    </section>
+    <section class="card">
+      <h2>전환 흐름<small>방문자 대비 비율</small></h2>
+      <div class="hbars" id="funnel"></div>
+    </section>
+  </div>
+
+  <section class="card" style="margin-top:14px">
+    <div class="split">
+      <div><h3>유입 경로</h3><div class="hbars" id="bdSource"></div></div>
+      <div><h3>기기</h3><div class="hbars" id="bdDevice"></div></div>
+      <div><h3>상담창을 연 사람의 재산 구간</h3><div class="hbars" id="bdEstate"></div></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>상담 신청<small id="reqCount"></small></h2>
+    <div class="req-tools">
+      <div id="statusChips" style="display:flex;gap:6px;flex-wrap:wrap">
+        <button class="chip" type="button" data-s="" aria-pressed="true">전체</button>
+        <button class="chip" type="button" data-s="접수">접수</button>
+        <button class="chip" type="button" data-s="연락완료">연락완료</button>
+        <button class="chip" type="button" data-s="상담완료">상담완료</button>
+        <button class="chip" type="button" data-s="보류">보류</button>
+      </div>
+      <button class="btn" type="button" id="csvBtn" style="margin-left:auto">엑셀(CSV) 내려받기</button>
+    </div>
+    <div id="reqList"></div>
+  </section>
+</main>
+
+<script>
+const SUPABASE_URL = 'https://ethdutjqlypeakjtcihd.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_MtWUXOOHRrZuMDd0IfPPfA_Ba-UAFqU';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const $ = id => document.getElementById(id);
+const STATUSES = ['접수','연락완료','상담완료','보류'];
+const EVENT_LABEL = {visit:'방문자', simulate:'시뮬레이션', share_family:'결과 보내기', share_link:'링크 공유', download:'이미지 내려받기', consult_open:'상담창 열기', consult_submit:'상담 접수', kakao_click:'카톡 문의', youtube_click:'영상 보기'};
+let days = 7, statusFilter = '', requests = [];
+
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const nf = n => Number(n||0).toLocaleString('ko-KR');
+function won(m){ m=Math.round(Number(m)||0); if(!m) return '0원'; const e=Math.floor(Math.abs(m)/10000), r=Math.abs(m)%10000; return (m<0?'−':'')+(e?e.toLocaleString()+'억':'')+(r?(e?' ':'')+r.toLocaleString()+'만':'')+' 원'; }
+function range(){
+  const to = new Date(Date.now()+60000);
+  if(!days) return {from:new Date('2020-01-01T00:00:00+09:00'), to};
+  const from = new Date(); from.setHours(0,0,0,0); from.setDate(from.getDate()-(days-1));
+  return {from, to};
+}
+const dkey = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+
+/* ---------- 로그인 ---------- */
+function show(view){ ['loginView','denyView','dashView'].forEach(v=>$(v).hidden = v!==view); }
+$('loginForm').addEventListener('submit', async e=>{
+  e.preventDefault();
+  const email=$('loginEmail').value.trim(), msg=$('loginMsg');
+  $('loginBtn').disabled=true;
+  const {error} = await sb.auth.signInWithOtp({email, options:{emailRedirectTo: location.origin+location.pathname}});
+  $('loginBtn').disabled=false; msg.hidden=false;
+  if(error){ msg.className='msg err'; msg.textContent='보내지 못했습니다: '+error.message; }
+  else { msg.className='msg ok'; msg.textContent=email+' 로 로그인 링크를 보냈습니다. 메일함(스팸함 포함)을 확인해 주세요.'; }
+});
+$('logoutBtn').addEventListener('click', async ()=>{ await sb.auth.signOut(); location.reload(); });
+
+async function boot(){
+  const {data:{session}} = await sb.auth.getSession();
+  if(!session){ $('who').hidden=true; show('loginView'); return; }
+  $('who').hidden=false; $('whoEmail').textContent=session.user.email;
+  const {data:isAdmin} = await sb.rpc('is_admin');
+  if(!isAdmin){ show('denyView'); return; }
+  show('dashView'); load();
+}
+sb.auth.onAuthStateChange((ev)=>{ if(ev==='SIGNED_IN' || ev==='SIGNED_OUT') boot(); });
+
+/* ---------- 데이터 ---------- */
+async function load(){
+  const {from, to} = range();
+  $('updated').textContent='불러오는 중…';
+  const [st, bd, rq] = await Promise.all([
+    sb.rpc('admin_event_stats', {p_from:from.toISOString(), p_to:to.toISOString()}),
+    sb.rpc('admin_breakdown', {p_from:from.toISOString(), p_to:to.toISOString()}),
+    sb.from('consult_requests').select('*').gte('created_at', from.toISOString()).order('created_at', {ascending:false}).limit(1000),
+  ]);
+  const err = st.error || bd.error || rq.error;
+  if(err){ $('updated').textContent='불러오지 못했습니다: '+err.message; return; }
+  requests = rq.data || [];
+  renderKpis(st.data||[]); renderDaily(st.data||[], from, to); renderFunnel(st.data||[]); renderBreakdown(bd.data||[]); renderRequests();
+  $('updated').textContent = '업데이트 '+new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'});
+}
+// 이벤트별 세션 수 합계 (방문자는 기간 내 고유 세션 기준에 가깝게: 일별 세션의 합)
+function totals(rows){
+  const t={}; rows.forEach(r=>{ t[r.event] = t[r.event] || {n:0, s:0}; t[r.event].n += Number(r.n); t[r.event].s += Number(r.sessions); });
+  return t;
+}
+
+function renderKpis(rows){
+  const t=totals(rows), g=k=>t[k]?t[k].s:0, n=k=>t[k]?t[k].n:0;
+  const visits=g('visit'), submits=requests.length;
+  const conv = visits ? (submits/visits*100) : 0;
+  const tiles = [
+    ['방문자', nf(visits), '명 (세션)'],
+    ['시뮬레이션', nf(g('simulate')), '명이 숫자 입력'],
+    ['결과 보내기', nf(n('share_family')), '회'],
+    ['이미지 내려받기', nf(n('download')), '회'],
+    ['상담창 열기', nf(g('consult_open')), '명'],
+    ['상담 접수', nf(submits), '건', 'hi'],
+    ['접수 전환율', conv.toFixed(1)+'%', '방문자 대비', 'hi'],
+    ['카톡 문의', nf(n('kakao_click')), '회'],
+    ['영상 보기', nf(n('youtube_click')), '회'],
+  ];
+  $('kpis').innerHTML = tiles.map(([k,v,u,c])=>`<div class="kpi ${c||''}"><span>${k}</span><b>${v}</b><em>${u}</em></div>`).join('');
+}
+
+function renderDaily(rows, from, to){
+  const box=$('dailyChart');
+  const map={}; rows.filter(r=>r.event==='visit').forEach(r=>{ map[r.day]=Number(r.sessions); });
+  const sub={}; requests.forEach(r=>{ const k=dkey(new Date(r.created_at)); sub[k]=(sub[k]||0)+1; });
+  // 날짜 목록 (전체 기간이면 첫 기록일부터)
+  let start = new Date(from); start.setHours(0,0,0,0);
+  if(!days){ const ks=Object.keys(map).sort(); start = ks.length ? new Date(ks[0]+'T00:00:00') : new Date(); }
+  const list=[]; for(let d=new Date(start); d<=to && list.length<400; d.setDate(d.getDate()+1)) list.push(dkey(d));
+  if(!list.length || !Object.keys(map).length){ box.innerHTML='<p class="empty">아직 방문 기록이 없습니다. 사이트에 방문이 생기면 여기에 표시됩니다.</p>'; return; }
+  const W=640,H=220,L=36,R=8,T=12,B=28, max=Math.max(1,...list.map(k=>map[k]||0));
+  const step = max<=5?1: max<=10?2: max<=25?5: max<=50?10: Math.ceil(max/5/10)*10;
+  const ymax = Math.ceil(max/step)*step;
+  const bw=(W-L-R)/list.length, X=i=>L+i*bw, Y=v=>T+(1-v/ymax)*(H-T-B);
+  let s='';
+  for(let v=0; v<=ymax; v+=step) s+=`<line x1="${L}" x2="${W-R}" y1="${Y(v)}" y2="${Y(v)}" stroke="#ece9e1"/><text x="${L-6}" y="${Y(v)+4}" text-anchor="end" font-size="11" fill="#8a8a90">${v}</text>`;
+  const every=Math.ceil(list.length/7);
+  list.forEach((k,i)=>{
+    const v=map[k]||0, h=Y(0)-Y(v), x=X(i)+Math.max(1,bw*0.18), w=Math.max(2,bw*0.64);
+    // 막대: 위쪽 끝만 둥글게(4px), 아래는 기준선에 붙임
+    if(v>0){ const r=Math.min(4, h, w/2); s+=`<path d="M${x},${Y(0)} V${Y(v)+r} Q${x},${Y(v)} ${x+r},${Y(v)} H${x+w-r} Q${x+w},${Y(v)} ${x+w},${Y(v)+r} V${Y(0)} Z" fill="var(--bar)"/>`; }
+    if(i%every===0) s+=`<text x="${X(i)+bw/2}" y="${H-8}" text-anchor="middle" font-size="11" fill="#8a8a90">${k.slice(5).replace('-','/')}</text>`;
+    s+=`<rect class="hit" data-i="${i}" x="${X(i)}" y="${T}" width="${bw}" height="${H-T-B}" fill="transparent"/>`;
+  });
+  s+=`<line x1="${L}" x2="${W-R}" y1="${Y(0)}" y2="${Y(0)}" stroke="#c8c4b8"/>`;
+  box.innerHTML=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="일별 방문자 막대 그래프">${s}</svg><div class="tip"></div>`;
+  const tip=box.querySelector('.tip'), svg=box.querySelector('svg');
+  svg.querySelectorAll('.hit').forEach(r=>{
+    r.addEventListener('pointerenter',()=>{
+      const i=+r.dataset.i, k=list[i], rc=svg.getBoundingClientRect(), sc=rc.width/W;
+      tip.innerHTML=`<b>${k.slice(5).replace('-','/')}</b> · 방문 ${nf(map[k]||0)}명 · 접수 ${nf(sub[k]||0)}건`;
+      tip.style.left=((X(i)+bw/2)*sc)+'px'; tip.style.top=(Y(map[k]||0)*sc)+'px'; tip.style.opacity=1;
+    });
+    r.addEventListener('pointerleave',()=>tip.style.opacity=0);
+  });
+}
+
+function hbars(el, items, base){
+  if(!items.length){ el.innerHTML='<p class="empty">기록 없음</p>'; return; }
+  const max=Math.max(1,...items.map(i=>i.v));
+  el.innerHTML = items.map(i=>`<div class="hb"><span class="lbl" title="${esc(i.k)}">${esc(i.k)}</span><span class="trk"><span class="fill" style="width:${(i.v/max*100).toFixed(1)}%"></span></span><span class="num">${nf(i.v)}${base?`<small>${base?(i.v/base*100).toFixed(0):0}%</small>`:''}</span></div>`).join('');
+}
+function renderFunnel(rows){
+  const t=totals(rows), g=k=>t[k]?t[k].s:0, visits=g('visit');
+  hbars($('funnel'), [
+    {k:'방문', v:visits},
+    {k:'숫자 입력', v:g('simulate')},
+    {k:'결과 보내기', v:g('share_family')},
+    {k:'상담창 열기', v:g('consult_open')},
+    {k:'상담 접수', v:requests.length},
+  ], visits||0);
+}
+function renderBreakdown(rows){
+  const SRC={direct:'직접 방문', youtube:'유튜브', kakao:'카카오톡', google:'구글', naver:'네이버', daum:'다음', sns:'SNS'};
+  const DEV={mobile:'휴대폰', desktop:'PC'};
+  const pick=(dim,lab)=>rows.filter(r=>r.dim===dim).map(r=>({k:(lab&&lab[r.val])||r.val, v:Number(r.sessions)}));
+  const src=pick('source',SRC), dev=pick('device',DEV), est=pick('estate');
+  const tot=a=>a.reduce((s,i)=>s+i.v,0);
+  hbars($('bdSource'), src.slice(0,8), tot(src)); hbars($('bdDevice'), dev, tot(dev)); hbars($('bdEstate'), est, tot(est));
+}
+
+/* ---------- 상담 신청 목록 ---------- */
+function renderRequests(){
+  const list = requests.filter(r=>!statusFilter || r.status===statusFilter);
+  $('reqCount').textContent = `${nf(list.length)}건` + (statusFilter?` (${statusFilter})`:'');
+  if(!list.length){ $('reqList').innerHTML='<p class="empty">이 기간에 들어온 신청이 없습니다.</p>'; return; }
+  $('reqList').innerHTML = list.map(r=>{
+    const i=r.inputs||{}, res=r.result||{};
+    const t=new Date(r.created_at).toLocaleString('ko-KR',{month:'numeric',day:'numeric',weekday:'short',hour:'2-digit',minute:'2-digit'});
+    const tel=String(r.phone||'').replace(/[^0-9+]/g,'');
+    const facts=[
+      i.estate_man!=null && `상속재산 <b>${won(i.estate_man)}</b>`,
+      i.spouse!=null && `배우자 <b>${i.spouse?'있음':'없음'}</b>`,
+      i.children!=null && `자녀 <b>${esc(i.children)}명</b>`,
+      i.death_within_10y && `<b>${esc(i.years)}년 내 사망 가정</b>`,
+      res.inheritance_tax_no_gift!=null && `예상 상속세 <b>${won(res.inheritance_tax_no_gift)}</b>`,
+      res.recommended_gift_per_child!=null && `추천 증여 <b>${won(res.recommended_gift_per_child)}</b>/인`,
+    ].filter(Boolean).map(f=>`<span class="fact">${f}</span>`).join('') + (res.saving?`<span class="fact save">절세 <b>${won(res.saving)}</b></span>`:'');
+    return `<article class="req ${r.status==='접수'?'new':''}">
+      <div class="req-top">
+        <div><div class="req-name">${esc(r.name)}<a href="tel:${esc(tel)}">${esc(r.phone)}</a></div><div class="req-time">${t} 접수</div></div>
+        <select data-id="${r.id}" aria-label="진행 상태">${STATUSES.map(s=>`<option${s===r.status?' selected':''}>${s}</option>`).join('')}</select>
+      </div>
+      <div class="req-facts">${facts}</div>
+      ${r.memo?`<p class="req-memo">${esc(r.memo)}</p>`:''}
+      <details><summary>전체 요약 보기</summary><pre>${esc(r.summary)}</pre></details>
+      ${r.page_url?`<div class="links"><a href="${esc(r.page_url)}" target="_blank" rel="noopener">고객이 본 결과 화면 열기 ↗</a></div>`:''}
+    </article>`;
+  }).join('');
+  $('reqList').querySelectorAll('select').forEach(sel=>sel.addEventListener('change', async ()=>{
+    const id=+sel.dataset.id, status=sel.value; sel.disabled=true;
+    const {error}=await sb.from('consult_requests').update({status}).eq('id', id);
+    sel.disabled=false;
+    if(error){ alert('상태를 바꾸지 못했습니다: '+error.message); return; }
+    const r=requests.find(x=>x.id===id); if(r) r.status=status; renderRequests();
+  }));
+}
+$('statusChips').addEventListener('click', e=>{
+  const b=e.target.closest('.chip'); if(!b) return;
+  statusFilter=b.dataset.s; $('statusChips').querySelectorAll('.chip').forEach(c=>c.setAttribute('aria-pressed', String(c===b)));
+  renderRequests();
+});
+$('csvBtn').addEventListener('click', ()=>{
+  const head=['접수시각','이름','연락처','상태','상속재산(만원)','배우자','자녀','예상상속세(만원)','추천증여액/인(만원)','절세액(만원)','궁금한점','결과링크'];
+  const rows=requests.filter(r=>!statusFilter || r.status===statusFilter).map(r=>{const i=r.inputs||{}, s=r.result||{};
+    return [new Date(r.created_at).toLocaleString('ko-KR'), r.name, r.phone, r.status, i.estate_man, i.spouse?'있음':'없음', i.children, s.inheritance_tax_no_gift, s.recommended_gift_per_child, s.saving, r.memo||'', r.page_url||''];});
+  const csv='﻿'+[head,...rows].map(a=>a.map(v=>`"${String(v??'').replace(/"/g,'""')}"`).join(',')).join('\r\n');
+  const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'})); a.download=`상담신청_${dkey(new Date())}.csv`; a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+});
+
+/* ---------- 기간 ---------- */
+$('rangeSeg').addEventListener('click', e=>{
+  const b=e.target.closest('button'); if(!b) return;
+  days=+b.dataset.d; $('rangeSeg').querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed', String(x===b)));
+  load();
+});
+$('refreshBtn').addEventListener('click', load);
+
+boot();
+</script>
+</body>
+</html>
