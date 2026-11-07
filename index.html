@@ -378,6 +378,7 @@ details[open] summary{margin-bottom:12px}
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script>
+const INITIAL_SEARCH = location.search; // 주소가 입력값으로 바뀌기 전의 utm_source를 기억
 /* ===== 설정 ===== */
 // 상담 신청 버튼이 열 주소 (카카오톡 채널 채팅, 구글폼 등). 비워두면 결과 요약만 복사합니다.
 const CONSULT_URL = 'https://pf.kakao.com/_nDsHT/chat';
@@ -1110,7 +1111,7 @@ const SESSION_ID = (()=>{
   try{ let s=sessionStorage.getItem('nono_sid'); if(!s){ s=make(); sessionStorage.setItem('nono_sid', s); } return s; }catch(e){ return make(); }
 })();
 function trafficSource(){
-  const q = new URLSearchParams(location.search).get('utm_source');
+  const q = new URLSearchParams(INITIAL_SEARCH).get('utm_source');
   if(q) return q.toLowerCase().slice(0,60);
   if(/KAKAOTALK/i.test(navigator.userAgent)) return 'kakao';
   let host=''; try{ host = document.referrer ? new URL(document.referrer).hostname : ''; }catch(e){}
